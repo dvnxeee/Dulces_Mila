@@ -1,0 +1,88 @@
+/* src/pages/productos/ProductListByCategory.css */
+/* Estilos genéricos para las cards de productos */
+
+.catalogo-container {
+    padding: 40px 0;
+    text-align: center;
+}
+
+.catalogo-grid {
+    display: flex;
+    flex-wrap: wrap; /* Permite que las tarjetas pasen a la siguiente línea */
+    justify-content: center; /* Centra las tarjetas */
+    gap: 30px; /* Espacio entre tarjetas */
+}
+
+/* La tarjeta individual */
+.producto-card {
+    background-color: #ffffff; /* Fondo blanco */
+    border: 1px solid #eee;
+    box-shadow: 0px 4px 10px rgba(75, 75, 75, 0.1);
+    border-radius: 8px;
+    padding: 0; /* Quitamos padding para que la imagen pegue arriba */
+    color: #333; /* Color de texto oscuro */
+    width: 300px; /* Ancho fijo para la tarjeta */
+    transition: transform 0.2s ease-in-out;
+}
+
+.producto-card:hover {
+    transform: scale(1.02); /* Efecto al pasar el mouse */
+}
+
+/* La imagen */
+.producto-imagen {
+    width: 100%;
+    height: 200px; /* Altura fija para la imagen */
+    object-fit: cover; /* Asegura que la imagen cubra el espacio */
+    border-radius: 8px 8px 0 0; /* Bordes redondeados solo arriba */
+    margin: 0;
+}
+
+.producto-card h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #BB6653; /* Color de tu marca */
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+
+.producto-card .precio {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #000;
+    margin-bottom: 15px;
+}
+
+.producto-card .descripcion {
+    font-size: 0.9rem;
+    color: #555;
+    padding: 0 15px;
+    margin-bottom: 10px;
+    min-height: 60px; /* Altura mínima para alinear botones */
+}
+
+.producto-card .stock {
+    font-size: 0.8rem;
+    color: #6c757d; /* Color gris (muted) */
+    margin-bottom: 15px;
+}
+
+.producto-card .btn-agregar {
+    background-color: #BB6653;
+    color: #FFF8E8;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 0 15px 20px 15px; /* Margen inferior y a los lados */
+    transition: background-color 0.2s;
+}
+
+.producto-card .btn-agregar:hover {
+    background-color: #a05544; /* Color más oscuro al pasar el mouse */
+}
+
+.producto-card .btn-agregar:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
