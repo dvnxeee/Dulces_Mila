@@ -1,0 +1,21 @@
+#Quienes-somos .container {
+
+    text-align: center;
+    padding: 150px 50px;
+    color: #BB6653;
+}
+
+#Quienes-somos .container h2 {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+@media (min-width: 720px) {
+    #Quienes-somos .imagen {
+        background-image: url("/src/assets/img/18.jpg");
+        background-size: cover;
+        background-position: center center;
+        height: 500px;
+        width: 50%px;
+    }
+}
