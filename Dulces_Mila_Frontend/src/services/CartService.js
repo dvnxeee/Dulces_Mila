@@ -1,81 +1,130 @@
-const CART_KEY = 'dulcesMilaCart'; // Clave para guardar el carrito en localStorage
+import api from './Api';
 
-/**
- * Obtiene el carrito de compras desde localStorage.
- * @returns {Array} Un array de objetos de producto con sus cantidades.
- */
-export const getCart = () => {
-    try {
-        const cartData = localStorage.getItem(CART_KEY);
-        // Si hay datos, los parsea. Si no, devuelve un array vacío.
-        return cartData ? JSON.parse(cartData) : [];
-    } catch (error) {
-        console.error("Error al leer el carrito desde localStorage:", error);
-        return [];
-    }
+const CART_KEY = 'dulcesMilaCart';
+
+// --- Helper para saber si estamos en modo "Nube" o "Local" ---
+const isUserLoggedIn = () => {
+    const token = localStorage.getItem('token'); // O verifica 'user' en localStorage
+    return !!token; // Devuelve true si hay token
 };
 
-/**
- * Guarda el carrito de compras en localStorage.
- * @param {Array} cartItems - El array de productos a guardar.
- */
-export const saveCart = (cartItems) => {
-    try {
-        localStorage.setItem(CART_KEY, JSON.stringify(cartItems));
-        // Opcional: Despachar un evento para que el Navbar pueda escucharlo
-        window.dispatchEvent(new Event('cartUpdated'));
-    } catch (error) {
-        console.error("Error al guardar el carrito en localStorage:", error);
-    }
-};
+// --- FUNCIONES DEL CARRITO (Híbridas) ---
 
 /**
- * Añade un producto al carrito o actualiza su cantidad.
- * @param {Object} product - El objeto del producto a añadir.
- * @param {number} quantity - La cantidad a añadir.
+ * Obtiene el carrito (desde API o LocalStorage)
  */
-export const addItemToCart = (product, quantity) => {
-    const cart = getCart();
-    const existingItemIndex = cart.findIndex(item => item.id === product.id);
-
-    if (existingItemIndex > -1) {
-        // Si el producto ya existe, actualiza la cantidad
-        cart[existingItemIndex].cantidad += quantity;
+export const getCart = async () => {
+    if (isUserLoggedIn()) {
+        try {
+            // MODO NUBE: Pedimos el carrito a la base de datos
+            const response = await api.get('/carrito');
+            // El backend devuelve un objeto Carrito con una lista 'items'. 
+            // Mapeamos para que tenga el formato simple que usa tu frontend:
+            // [{ id, nombre, precio, cantidad, imagen, stock }, ...]
+            return response.data.items.map(item => ({
+                ...item.producto, // Datos del producto
+                cantidad: item.cantidad // Cantidad en el carrito
+            }));
+        } catch (error) {
+            console.error("Error al cargar carrito de la nube:", error);
+            return []; // Retorna vacío si falla
+        }
     } else {
-        // Si es un producto nuevo, lo añade
-        cart.push({ ...product, cantidad: quantity });
+        // MODO LOCAL: Leemos de localStorage
+        return new Promise((resolve) => {
+            const cartData = localStorage.getItem(CART_KEY);
+            resolve(cartData ? JSON.parse(cartData) : []);
+        });
     }
-    saveCart(cart);
 };
 
 /**
- * Elimina un producto completamente del carrito.
- * @param {number} productId - El ID del producto a eliminar.
+ * Agrega un ítem (a la API o LocalStorage)
  */
-export const removeItemFromCart = (productId) => {
-    let cart = getCart();
-    cart = cart.filter(item => item.id !== productId);
-    saveCart(cart);
-};
+export const addItemToCart = async (producto, cantidad) => {
+    if (isUserLoggedIn()) {
+        try {
+            // MODO NUBE: Enviamos al backend
+            await api.post('/carrito/agregar', {
+                productoId: producto.id,
+                cantidad: cantidad
+            });
+            // Despachamos evento para actualizar Navbar
+            window.dispatchEvent(new Event('cartUpdated'));
+        } catch (error) {
+            console.error("Error al guardar en la nube:", error);
+            alert("Error al sincronizar el carrito.");
+        }
+    } else {
+        // MODO LOCAL: Lógica original de localStorage
+        return new Promise((resolve) => {
+            const cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
+            const existingItemIndex = cart.findIndex(item => item.id === producto.id);
 
-/**
- * Limpia todo el carrito de compras.
- */
-export const clearCart = () => {
-    localStorage.removeItem(CART_KEY);
-    // Despachar el evento para que el Navbar se actualice
-    window.dispatchEvent(new Event('cartUpdated'));
-};
-
-/**
- * Obtiene el número total de ítems únicos o el total de la suma de cantidades.
- * @param {boolean} countTotalQuantity - Si es true, suma las cantidades; si es false, cuenta ítems únicos.
- * @returns {number} El número total de ítems.
- */
-export const getCartItemCount = (countTotalQuantity = true) => {
-    const cart = getCart();
-    if (countTotalQuantity) {
-        return cart.reduce((total, item) => total + item.cantidad, 0);
+            if (existingItemIndex > -1) {
+                cart[existingItemIndex].cantidad += cantidad;
+            } else {
+                cart.push({ ...producto, cantidad: cantidad });
+            }
+            
+            localStorage.setItem(CART_KEY, JSON.stringify(cart));
+            window.dispatchEvent(new Event('cartUpdated'));
+            resolve(cart);
+        });
     }
-    return cart.length; // Cuenta solo la cantidad de productos diferentes
+};
+
+/**
+ * Elimina un ítem (de la API o LocalStorage)
+ */
+export const removeItemFromCart = async (productoId) => {
+    if (isUserLoggedIn()) {
+        try {
+            // MODO NUBE
+            await api.delete(`/carrito/eliminar/${productoId}`);
+            window.dispatchEvent(new Event('cartUpdated'));
+        } catch (error) {
+            console.error("Error al eliminar de la nube:", error);
+        }
+    } else {
+        // MODO LOCAL
+        return new Promise((resolve) => {
+            let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
+            cart = cart.filter(item => item.id !== productoId);
+            localStorage.setItem(CART_KEY, JSON.stringify(cart));
+            window.dispatchEvent(new Event('cartUpdated'));
+            resolve(cart);
+        });
+    }
+};
+
+/**
+ * Vacía el carrito (en API o LocalStorage)
+ */
+export const clearCart = async () => {
+    if (isUserLoggedIn()) {
+        try {
+            // MODO NUBE
+            await api.delete('/carrito/vaciar');
+            window.dispatchEvent(new Event('cartUpdated'));
+        } catch (error) {
+            console.error("Error al vaciar carrito nube:", error);
+        }
+    } else {
+        // MODO LOCAL
+        return new Promise((resolve) => {
+            localStorage.removeItem(CART_KEY);
+            window.dispatchEvent(new Event('cartUpdated'));
+            resolve();
+        });
+    }
+};
+
+/**
+ * Cuenta ítems para el Navbar
+ */
+export const getCartItemCount = async () => {
+    // Reutilizamos getCart para no duplicar lógica
+    const items = await getCart();
+    return items.reduce((total, item) => total + item.cantidad, 0);
 };

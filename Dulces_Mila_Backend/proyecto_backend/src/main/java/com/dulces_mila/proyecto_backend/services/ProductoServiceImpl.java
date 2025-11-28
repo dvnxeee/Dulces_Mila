@@ -123,24 +123,24 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     public String guardarImagen(MultipartFile archivo) {
         try {
-            // 1. Generar un nombre de archivo único
+            // Generar un nombre de archivo único
             String nombreOriginal = archivo.getOriginalFilename();
             // Sacamos la extensión (ej. ".jpg")
             String extension = nombreOriginal.substring(nombreOriginal.lastIndexOf("."));
             // Creamos un nombre único (ej. "abc-123-def.jpg")
             String nombreUnico = UUID.randomUUID().toString() + extension;
 
-            // 2. Definir la ruta de guardado
+            // Definir la ruta de guardado
             // Paths.get(uploadDir) -> "uploads/"
             Path rutaDeGuardado = Paths.get(uploadDir).resolve(nombreUnico).toAbsolutePath();
 
-            // 3. Crear la carpeta 'uploads' si no existe
+            // Crear la carpeta 'uploads' si no existe
             Files.createDirectories(Paths.get(uploadDir).toAbsolutePath());
 
-            // 4. Copiar el archivo al servidor
+            // Copiar el archivo al servidor
             Files.copy(archivo.getInputStream(), rutaDeGuardado);
 
-            // 5. Devolver la URL relativa que usará el frontend
+            // Devolver la URL relativa que usará el frontend
             // (Ej: "/uploads/abc-123-torta.jpg")
             return "/uploads/" + nombreUnico;
 

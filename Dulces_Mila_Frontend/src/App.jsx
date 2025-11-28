@@ -1,4 +1,4 @@
-// --- 1. Importaciones ---
+// --- Importaciones ---
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './componentes/layout/Layout';
 import { Home } from './pages/home/Home';
@@ -12,6 +12,7 @@ import { EditarProd } from './componentes/formulario/EditarProd';
 import Administrador from "./pages/administrador/Administrador";
 import { Registro } from './componentes/formulario/Registro';
 import ProductListByCategory from './pages/productos/ProductListByCategory';
+import { MisCompras } from './pages/ventas/MisCompras'; // Importar
 
 // ... (Importa tus otros componentes: Contacto, Productos, etc.) ...
 import './App.css';
@@ -31,6 +32,7 @@ function App() {
         <Route path="/editar-producto/:id" element={<Layout><EditarProd /></Layout>} />
         <Route path="/registro" element={<Layout><Registro /></Layout>} />
         <Route path="/productos/categoria/:id" element={<Layout><ProductListByCategory /></Layout>} />
+        <Route path="/mis-compras" element={<Layout><MisCompras /></Layout>} />
       </Routes>
     </Router>
   );

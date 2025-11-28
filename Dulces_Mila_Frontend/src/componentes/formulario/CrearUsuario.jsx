@@ -82,19 +82,17 @@ export function CrearUsuario() {
     return (
         <div className="container my-5">
             <div className="row justify-content-center">
-                <div className="col-md-8 col-lg-6"> {/* Ajusta el tamaño si es necesario */}
-                    <div className="card shadow-sm"> {/* Sombra suave */}
+                <div className="col-md-8 col-lg-6">
+                    <div className="card shadow-sm">
                         <div className="card-header bg-success text-white">
                             <h4><i className="bi bi-person-plus-fill me-2"></i> Crear Nuevo Usuario</h4>
                         </div>
                         <div className="card-body">
                             
-                            {/* Mensaje de Error General */}
                             {generalError && <div className="alert alert-danger py-2">{generalError}</div>}
 
                             <form onSubmit={handleSubmit} noValidate> {/* noValidate para que las validaciones del backend tengan prioridad */}
                                 
-                                {/* Campo NOMBRE */}
                                 <div className="mb-3">
                                     <label htmlFor="nombre" className="form-label">Nombre <span className="text-danger">*</span></label>
                                     <input
@@ -107,11 +105,9 @@ export function CrearUsuario() {
                                         disabled={isLoading}
                                         required 
                                     />
-                                    {/* Mensaje de error específico */}
                                     {validationErrors.nombre && <div className="invalid-feedback d-block">{validationErrors.nombre}</div>} 
                                 </div>
 
-                                {/* Campo EMAIL */}
                                 <div className="mb-3">
                                     <label htmlFor="email" className="form-label">Email <span className="text-danger">*</span></label>
                                     <input
@@ -127,7 +123,6 @@ export function CrearUsuario() {
                                     {validationErrors.email && <div className="invalid-feedback d-block">{validationErrors.email}</div>}
                                 </div>
                                 
-                                {/* Campo CONTRASEÑA */}
                                 <div className="mb-3">
                                     <label htmlFor="contraseña" className="form-label">Contraseña <span className="text-danger">*</span></label>
                                     <input
@@ -141,13 +136,11 @@ export function CrearUsuario() {
                                         required
                                         aria-describedby="passwordHelp"
                                     />
-                                    {/* Mensaje de ayuda y error */}
                                     <div id="passwordHelp" className="form-text">Debe tener al menos 8 caracteres.</div>
                                     {validationErrors.contraseña && <div className="invalid-feedback d-block">{validationErrors.contraseña}</div>}
                                 </div>
                                 
-                                {/* Campo ROL */}
-                                <div className="mb-4"> {/* Más espacio antes de los botones */}
+                                <div className="mb-4"> 
                                     <label htmlFor="rol" className="form-label">Rol <span className="text-danger">*</span></label>
                                     <select
                                         id="rol"
@@ -158,7 +151,6 @@ export function CrearUsuario() {
                                         disabled={isLoading}
                                         required
                                     >
-                                        {/* Mapea las opciones desde ROLES_DISPONIBLES */}
                                         {ROLES_DISPONIBLES.map(rol => (
                                             <option key={rol.value} value={rol.value}>{rol.label}</option>
                                         ))}
@@ -166,7 +158,6 @@ export function CrearUsuario() {
                                     {validationErrors.rol && <div className="invalid-feedback d-block">{validationErrors.rol}</div>}
                                 </div>
 
-                                {/* Botones de Acción */}
                                 <div className="d-flex justify-content-between pt-3 border-top">
                                     <button 
                                         type="button" 

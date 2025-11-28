@@ -1,28 +1,31 @@
 import api from './Api'; // Importa la instancia de Axios
 
-const USER_URL = '/usuarios';
+// Definimos las rutas
+const USER_URL = '/usuarios'; 
+// Cambia la constante o úsala directamente
+const AUTH_URL = '/auth'; 
 
-// --- LOGIN ---
 export const login = async (email, contraseña) => {
     try {
-        const response = await api.post(`${USER_URL}/login`, { email, contraseña });
+        // CAMBIO AQUÍ: Usamos /auth/login
+        // Como api.js ya tiene base '/api', esto resulta en '/api/auth/login'
+        const response = await api.post(`${AUTH_URL}/login`, { email, contraseña });
         return response.data;
     } catch (error) {
-        // Lanza el mensaje de error específico del backend (ej. "Credenciales incorrectas")
         const errorMessage = error.response ? error.response.data.error : "Error de conexión.";
         throw errorMessage;
     }
 };
+// ... (resto del archivo igual)
 
-// --- CRUD ---
+// --- CRUD (Actualizado con /api) ---
 
-/** 1. LEER TODOS (GET /api/usuarios) */
 export const getAllUsers = async () => {
     try {
-        const response = await api.get(USER_URL);
+        const response = await api.get(USER_URL); // Usa /api/usuarios
         return response.data;
     } catch (error) {
-        console.error("Error en UserService (getAllUsers):", error);
+        console.error("Error:", error);
         throw new Error("No se pudo cargar la lista de usuarios.");
     }
 };

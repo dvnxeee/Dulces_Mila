@@ -1,17 +1,16 @@
 // src/pages/productos/ProductListByCategory.jsx
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom'; // useParams para leer el ID de la URL
-// 1. Importamos la función de servicio que creamos
+// Importamos la función de servicio que creamos
 import { getProductosPorCategoria } from '../../services/ProductService';
-// 2. Importamos el nuevo CSS
+// Importamos el nuevo CSS
 import './ProductListByCategory.css';
-// 3. Importamos la lógica del carrito que creamos
-import { addItemToCart } from '../../services/CartService';
+// Importamos la lógica del carrito que creamos
 import { ProductoCard } from '../../componentes/productos/ProductoCard'; // Importamos la tarjeta reutilizable
 
 export const ProductListByCategory = () => {
-    // 4. Obtenemos el ID de la categoría desde la URL (ej. el '5')
+    // Obtenemos el ID de la categoría desde la URL (ej. el '5')
     const { id } = useParams();
 
     // Estados para los productos, carga y errores
@@ -20,7 +19,7 @@ export const ProductListByCategory = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // 5. Hook para cargar los productos cuando el ID cambia
+    // Hook para cargar los productos cuando el ID cambia
     useEffect(() => {
         const cargarProductos = async () => {
             setLoading(true);
@@ -77,7 +76,7 @@ export const ProductListByCategory = () => {
             {productos.length === 0 ? (
                 <p className="text-center">No hay productos disponibles en esta categoría.</p>
             ) : (
-                // 6. Usamos el grid para mostrar las tarjetas
+                // Usamos el grid para mostrar las tarjetas
                 <section className="catalogo-grid">
                     {productos.map((producto) => (
                         // 7. Usamos el componente Card reutilizable
@@ -86,7 +85,6 @@ export const ProductListByCategory = () => {
                 </section>
             )}
 
-            {/* Botón para volver al catálogo principal */}
             <div className="text-center mt-5">
                 <Link to="/" className="btn btn-secondary">&laquo; Volver a Categorías</Link>
             </div>

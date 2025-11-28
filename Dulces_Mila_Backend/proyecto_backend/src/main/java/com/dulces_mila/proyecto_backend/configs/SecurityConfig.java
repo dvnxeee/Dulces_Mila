@@ -1,59 +1,81 @@
 package com.dulces_mila.proyecto_backend.configs;
 
+import com.dulces_mila.proyecto_backend.security.JwtAuthenticationFilter;
+
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-/**
- * Esta es una clase de Configuración.
- * Aquí le decimos a Spring cómo queremos que se comporte
- * en ciertas cosas, en este caso, la Seguridad.
- */
 @Configuration
 public class SecurityConfig {
 
-    /**
-     * ¿Qué es un @Bean?
-     * Es como registrar una "herramienta" global.
-     * Estamos creando una herramienta para encriptar
-     * y la registramos con @Bean para que Spring
-     * sepa que existe y la pueda usar en otras partes
-     * del proyecto (como en el UsuarioService).
-     *
-     * Esto cumple el requisito de "contraseña (encriptada)".
-     */
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        // Le decimos a Spring que la herramienta que
-        // queremos usar es "BCrypt".
-        // Es el estándar y el más seguro.
-        return new BCryptPasswordEncoder();
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    // Inyectamos nuestro filtro JWT
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
-    /**
-     * Este @Bean es para la configuración de seguridad de las rutas (URLs).
-     * Por ahora, no queremos que Spring bloquee ninguna de nuestras
-     * URLs de la API.
-     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
-        // 1. Deshabilitamos 'csrf' (es una protección de seguridad
-        //    que no necesitamos para una API REST simple).
-        http.csrf(csrf -> csrf.disable())
-
-        // 2. Le decimos que autorice TODAS las peticiones.
-        //    (Más adelante, cuando hagamos el login, cambiaremos esto
-        //    para proteger rutas).
+        http
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/**").permitAll() // Permite todo lo que empiece con /api/
-                .anyRequest().permitAll() // Permite todo lo demás
-            );
+                // Permitir Login en la nueva ruta
+                .requestMatchers("/api/auth/**").permitAll() 
+                
+                // Permitir ver Productos y Categorías (Catálogo Público)
+                .requestMatchers("/api/productos/**", "/api/categorias/**").permitAll()
+                
+                // Permitir ver las Imágenes subidas
+                .requestMatchers("/uploads/**").permitAll()
 
-        // 3. Construimos la configuración.
+                // Permitir Registrarse (POST a /api/usuarios)
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/usuarios").permitAll()
+
+                // Todo lo demás requiere autenticación (Token)
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // Tu Frontend
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    // Necesario para el AuthController (Login)
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    // Mantener el encriptador que ya teníamos
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

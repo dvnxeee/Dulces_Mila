@@ -1,43 +1,71 @@
-import { useEffect, useState } from "react";
+// src/pages/carrito/Carrito.jsx
+
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-// 1. Importamos las funciones del "cerebro" del carrito
 import { getCart, removeItemFromCart, clearCart } from "../../services/CartService";
+// Importamos el servicio de ventas (¡Esto es lo que te falta!)
+import { realizarVenta } from "../../services/VentaService";
 
 export function Carrito() {
     const navigate = useNavigate();
-    // Estado para guardar los productos del carrito
     const [carrito, setCarrito] = useState([]);
 
-    // Carga inicial del carrito al montar el componente
+    // Estado para bloquear el botón mientras procesa la compra
+    const [procesando, setProcesando] = useState(false);
+
     useEffect(() => {
-        const items = getCart();
-        setCarrito(items);
-        
-        // Opcional: Escuchar eventos de actualización del carrito desde otras partes de la app
-        // Esto ayudará a que el contador del Navbar se actualice si estás en la página del carrito
-        const handleCartUpdate = () => {
-            setCarrito(getCart());
+        const cargar = async () => {
+            const items = await getCart(); // Usamos await
+            setCarrito(items);
         };
-        window.addEventListener('cartUpdated', handleCartUpdate);
+        cargar();
+    }, []);
 
-        return () => {
-            window.removeEventListener('cartUpdated', handleCartUpdate);
-        };
-    }, []); 
-
-    // Lógica para eliminar un producto del carrito
     const handleEliminar = (productoId) => {
         removeItemFromCart(productoId);
-        setCarrito(getCart()); // Actualizamos el estado local para que la UI reaccione
+        setCarrito(getCart());
     };
 
-    // Lógica para vaciar todo el carrito
     const handleLimpiar = () => {
         clearCart();
-        setCarrito([]); // Vaciamos el estado local
+        setCarrito([]);
     };
 
-    // Calcula el total a pagar sumando precio * cantidad de cada producto
+    // Nueva función para procesar el pago real
+    const handlePagar = async () => {
+        // Verificación de seguridad simple
+        const user = localStorage.getItem('user');
+        if (!user) {
+            alert("Debes iniciar sesión para realizar una compra.");
+            navigate('/login');
+            return;
+        }
+
+        if (!window.confirm(`¿Confirmar compra por un total de $${total}?`)) {
+            return;
+        }
+
+        setProcesando(true); // Activa spinner o deshabilita botón
+
+        try {
+            // Llamamos al backend (Spring Boot)
+            // Esto ejecuta la lógica "complicada" de restar stock y guardar boleta
+            const ventaRealizada = await realizarVenta(carrito);
+
+            // Si todo sale bien:
+            alert(`¡Compra exitosa! N° de Boleta: ${ventaRealizada.id}\nGracias por tu preferencia.`);
+
+            handleLimpiar(); // Vacía el carrito local
+            navigate('/'); // Redirige al inicio
+
+        } catch (error) {
+            console.error("Error al pagar:", error);
+            alert(error.message || "Hubo un problema al procesar tu compra.");
+        } finally {
+            setProcesando(false); // Reactiva el botón
+        }
+    };
+
     const total = carrito.reduce((acc, p) => acc + (p.precio * p.cantidad), 0);
 
     return (
@@ -66,11 +94,11 @@ export function Carrito() {
                                 <tr key={p.id}>
                                     <td>
                                         <div className="d-flex align-items-center">
-                                            <img 
-                                                src={p.imagen ? `http://localhost:8080${p.imagen}` : '/placeholder.png'} 
-                                                alt={p.nombre} 
-                                                style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} 
-                                                onError={(e) => { e.target.onerror = null; e.target.src="/placeholder.png"; }}
+                                            <img
+                                                src={p.imagen ? `http://localhost:8080${p.imagen}` : '/placeholder.png'}
+                                                alt={p.nombre}
+                                                style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }}
+                                                onError={(e) => { e.target.onerror = null; e.target.src = "/placeholder.png"; }}
                                             />
                                             <span className="ms-3 fw-bold">{p.nombre}</span>
                                         </div>
@@ -79,10 +107,11 @@ export function Carrito() {
                                     <td>{p.cantidad}</td>
                                     <td>${p.precio * p.cantidad}</td>
                                     <td>
-                                        <button 
-                                            className="btn btn-sm btn-outline-danger" 
-                                            onClick={() => handleEliminar(p.id)} 
+                                        <button
+                                            className="btn btn-sm btn-outline-danger"
+                                            onClick={() => handleEliminar(p.id)}
                                             title="Quitar producto"
+                                            disabled={procesando}
                                         >
                                             <i className="bi bi-trash3"></i>
                                         </button>
@@ -100,18 +129,24 @@ export function Carrito() {
                     <div className="d-flex justify-content-between align-items-center">
                         <h3 className="mb-0">Total a pagar: ${total}</h3>
                         <div className="acciones">
-                            <button className="btn btn-danger me-2" onClick={handleLimpiar}>
+                            <button
+                                className="btn btn-danger me-2"
+                                onClick={handleLimpiar}
+                                disabled={procesando}
+                            >
                                 <i className="bi bi-trash3 me-1"></i> Vaciar carrito
                             </button>
+
                             <button
                                 className="btn btn-success"
-                                onClick={() => {
-                                    alert("¡Gracias por tu compra! (Lógica de pago y stock pendiente)");
-                                    handleLimpiar();
-                                    navigate('/'); 
-                                }}
+                                onClick={handlePagar} // Usa la función real
+                                disabled={procesando}
                             >
-                                <i className="bi bi-credit-card me-1"></i> Pagar
+                                {procesando ? (
+                                    <span><span className="spinner-border spinner-border-sm me-2"></span>Procesando...</span>
+                                ) : (
+                                    <span><i className="bi bi-credit-card me-1"></i> Pagar</span>
+                                )}
                             </button>
                         </div>
                     </div>
